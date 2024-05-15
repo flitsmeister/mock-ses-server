@@ -36,6 +36,8 @@ class FakeSESServer {
     this.emailCount = 0
     /** @type {(WaitGroup | null)[]} */
     this.waiters = []
+    /** @type {boolean[]} */
+    this.emailErrors = []
   }
 
   /** @returns {Promise<string>} */
@@ -78,6 +80,16 @@ class FakeSESServer {
   /** @returns {EmailInfo[]} */
   getEmails () {
     return this.emails.slice()
+  }
+
+  clearEmails() {
+    this.emails = []
+    this.emailCount = 0
+  }
+
+  /** @param {boolean[]} errors */
+  setEmailErrors(errors) {
+    this.emailErrors.push(...errors)
   }
 
   /**
@@ -130,6 +142,13 @@ class FakeSESServer {
    * @returns {null | string}
    */
   handleMessage (action, params) {
+    if (this.emailErrors.length > 0) {
+      const isError = this.emailErrors.shift()
+
+      if (isError)
+        return null
+    }
+
     switch (action) {
       case 'SendEmail':
         return this.handleEmail(params)
