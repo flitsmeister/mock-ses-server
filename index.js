@@ -21,7 +21,7 @@ class FakeSESServer {
   /**
    * @param {{ port?: number }} options
    */
-  constructor (options = {}) {
+  constructor (options = { port: process.argv[2] }) {
     /** @type {EmailInfo[]} */
     this.emails = []
 
@@ -47,7 +47,31 @@ class FakeSESServer {
     }
 
     this.httpServer.on('request', (req, res) => {
-      this.handleServerRequest(req, res)
+      if (req.url === '/emails') {
+          if (req.method === 'GET') {
+            res.writeHead(200, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify(this.getEmails()))
+          }
+
+          if (req.method === 'DELETE') {
+            this.clearEmails()
+            res.writeHead(200)
+            res.end()
+          }
+      } else if (req.url === '/errors' && req.method === 'POST') {
+        let body = ''
+        req.on('data', (chunk) => {
+          body += chunk.toString()
+        })
+        req.on('end', () => {
+          const errors = JSON.parse(body)
+          this.setEmailErrors(errors)
+          res.writeHead(200)
+          res.end()
+        })
+      } else {
+        this.handleServerRequest(req, res)
+      }
     })
 
     const server = this.httpServer
@@ -233,6 +257,10 @@ class FakeSESServer {
     }
   }
 }
+
+const server = new FakeSESServer()
+server.bootstrap()
+
 exports.FakeSESServer = FakeSESServer
 
 /** @returns {string} */
