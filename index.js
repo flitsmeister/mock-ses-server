@@ -129,10 +129,10 @@ class FakeSESServer {
       if (!xml) {
         res.statusCode = 404
         res.end('Not Found')
+      } else {
+        res.writeHead(200, { 'Content-Type': 'text/xml' })
+        res.end(xml)
       }
-
-      res.writeHead(200, { 'Content-Type': 'text/xml' })
-      res.end(xml)
     })
   }
 
