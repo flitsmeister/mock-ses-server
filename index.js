@@ -3,6 +3,7 @@
 const http = require('http')
 const querystring = require('querystring')
 const util = require('util')
+const mailparser = require('mailparser').simpleParser
 
 const { WaitGroup } = require('./sync-wait-group')
 
@@ -46,11 +47,11 @@ class FakeSESServer {
       throw new Error('cannot bootstrap closed server')
     }
 
-    this.httpServer.on('request', (req, res) => {
+    this.httpServer.on('request', async (req, res) => {
       if (req.url === '/emails') {
           if (req.method === 'GET') {
             res.writeHead(200, { 'Content-Type': 'application/json' })
-            res.end(JSON.stringify(this.getEmails()))
+            res.end(JSON.stringify(await this.getEmails()))
           }
 
           if (req.method === 'DELETE') {
@@ -101,9 +102,16 @@ class FakeSESServer {
     this.httpServer = null
   }
 
-  /** @returns {EmailInfo[]} */
-  getEmails () {
-    return this.emails.slice()
+  /** @returns {Promise<EmailInfo[]>} */
+  async getEmails () {
+    const parsedEmails = []
+
+    for (const email of this.emails) {
+      const parsedEmail = await mailparser(Buffer.from(email.body['RawMessage.Data'], 'base64').toString())
+      parsedEmails.push(parsedEmail)
+    }
+
+    return parsedEmails.reverse()
   }
 
   clearEmails() {
