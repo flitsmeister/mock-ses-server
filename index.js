@@ -104,18 +104,14 @@ class FakeSESServer {
 
   /** @returns {Promise<EmailInfo[]>} */
   async getEmails () {
-    const emails = this.emails
-      .slice()
-      .reverse()
-
     const parsedEmails = []
 
-    for (const email of emails) {
+    for (const email of this.emails) {
       const parsedEmail = await mailparser(Buffer.from(email.body['RawMessage.Data'], 'base64').toString())
       parsedEmails.push(parsedEmail)
     }
 
-    return parsedEmails
+    return parsedEmails.reverse()
   }
 
   clearEmails() {
