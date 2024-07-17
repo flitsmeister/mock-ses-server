@@ -218,6 +218,8 @@ class FakeSESServer {
       body: params
     })
 
+    console.log(`Received email: ${JSON.stringify(params)}`)
+
     this.emailCount++
     this.checkWaiters()
 
@@ -245,6 +247,8 @@ class FakeSESServer {
       id,
       body: params
     })
+
+    console.log(`Received email: ${JSON.stringify(params)}`)
 
     this.emailCount++
     this.checkWaiters()
